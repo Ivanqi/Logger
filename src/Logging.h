@@ -10,6 +10,21 @@
 
 class Logger
 {
+    private:
+        class RecordBlock
+        {
+            public:
+                RecordBlock(const char *fileName, int line);
+                void formatTime();
+
+                LogStream stream_;
+                int line_;
+                std::string basename_;
+        };
+
+        RecordBlock Redcord;
+        static std::string logFileName_;
+        
     public:
         Logger(const char *fileName, int line);
         ~Logger();
@@ -32,21 +47,6 @@ class Logger
         {
             return Redcord.stream_.buffer().data();
         }
-
-    private:
-        class RecordBlock
-        {
-            public:
-                RecordBlock(const char *fileName, int line);
-                void formatTime();
-
-                LogStream stream_;
-                int line_;
-                std::string basename_;
-        };
-
-        RecordBlock Redcord;
-        static std::string logFileName_;
 };
 
 // 日志打印宏

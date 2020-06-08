@@ -1,4 +1,5 @@
 #ifndef LOGGER_LOGSTREAM_H
+#define LOGGER_LOGSTREAM_H
 
 #include <assert.h>
 #include <string.h>
@@ -7,19 +8,22 @@
 
 
 const int kSmallBuffer = 4000;
-const int KLargeBuffer = 4000 * 1000;
+const int kLargeBuffer = 4000 * 1000;
 
-template<int SIZE>
-class FixedBuffer: boost::noncopyable
-{
+template<int SIZE> 
+class FixedBuffer : boost::noncopyable {
     private:
         char data_[SIZE];
-        char *cur_;
+        char* cur_;
+
     public:
-        FixedBuffer(): cur_(data_) {}
+        FixedBuffer()
+            :cur_(data_)
+        {}
+
         ~FixedBuffer() {}
 
-        void append(const char* buf, int len)
+        void append(const char* buf, size_t len) 
         {
             if (avail() > static_cast<int>(len)) {
                 memcpy(cur_, buf, len);
@@ -37,34 +41,38 @@ class FixedBuffer: boost::noncopyable
             return static_cast<int>(cur_ - data_);
         }
 
-        int avail() const
+        char* current() 
         {
-            return static_cast<int>(end() - cur_);
+            return cur_;
         }
 
-        void add(size_t len)
+        int avail() const 
+        {
+            const char* xxx = end();
+            return static_cast<int>(xxx - cur_);
+        }
+
+        void add(size_t len) 
         {
             cur_ += len;
         }
 
-        void reset() {
+        void reset() 
+        {
             cur_ = data_;
         }
 
-        void bzero() {
+        void bzero() 
+        {
             memset(data_, 0, sizeof(data_));
         }
 
-        char* current() {
-            return cur_;
-        }
-
     private:
-        const char* end() const 
-        {
+        const char* end() const {
             return data_ + sizeof(data_);
         }
 };
+
 
 class LogStream: boost::noncopyable
 {
@@ -76,7 +84,7 @@ class LogStream: boost::noncopyable
     public:
         LogStream& operator<<(bool v)
         {
-            buffer_.append(v == 1 ? "1" : "0", 1);
+            buffer_.append(v ? "1" : "0", 1);
             return *this;
         }
 

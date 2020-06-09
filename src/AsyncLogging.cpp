@@ -27,7 +27,6 @@ AsyncLogging::AsyncLogging(std::string logFileName_, int flushInterval)
 void AsyncLogging::append(const char* logline, int len)
 {
     MutexLockGuard lock(mutex_);
-    printf("currentBuffer_size:%d, len:%d\n", currentBuffer_->avail(), len);
     if (currentBuffer_->avail() > len) {
         currentBuffer_->append(logline, len);
     } else {
@@ -75,6 +74,8 @@ void AsyncLogging::threadFunc()
 
             buffers_.push_back(currentBuffer_);
             currentBuffer_.reset();
+
+            currentBuffer_ = std::move(newBuffer1);
             buffersToWrite.swap(buffers_);
             if (!nextBuffer_) {
                 nextBuffer_ = std::move(newBuffer2);

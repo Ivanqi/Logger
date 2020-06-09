@@ -48,8 +48,8 @@ class FixedBuffer : boost::noncopyable {
 
         int avail() const 
         {
-            const char* xxx = end();
-            return static_cast<int>(xxx - cur_);
+            const char* end_ = end();
+            return static_cast<int>(end_ - cur_);
         }
 
         void add(size_t len) 
@@ -69,7 +69,8 @@ class FixedBuffer : boost::noncopyable {
 
     private:
         const char* end() const {
-            return data_ + sizeof(data_);
+            const char* ret = data_ + sizeof(data_);
+            return ret;
         }
 };
 

@@ -21,15 +21,23 @@ void test_logger_2() {
 void test_logger_3() {
     string logPath = "./log.log";
     Logger::setLogFileName(logPath);
-    LOG << "Hooray! It's snowing! It's time to make a snowman.";
-    LOG << "Hooray! It's snowing! It's time to make a snowman.";
+
     LOG << "Hooray! It's snowing! It's time to make a snowman.";
     LOG << "Hooray! It's snowing! It's time to make a snowman.";
     LOG << "Hooray! It's snowing! It's time to make a snowman.";
 }
 
+void test_logger_4() {
+    string logPath = "./log.log";
+    Logger::setLogFileName(logPath);
+    while (true) {
+        LOG << "Hooray! It's snowing! It's time to make a snowman.";
+        sleep(1);
+    }
+}
+
 int main() {
     
-    test_logger_3();
+    test_logger_4();
     return 0;
 }

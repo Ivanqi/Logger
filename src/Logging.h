@@ -3,29 +3,51 @@
 
 #include <pthread.h>
 #include <string.h>
-#include <string>
+#include <string.h>
 #include <stdio.h>
 
 #include "LogStream.h"
+#include "Timestamp.h"
 
 class Logger
-{
-    private:
-        class RecordBlock
-        {
-            public:
-                RecordBlock(const char *fileName, int line);
-                void formatTime();
-
-                LogStream stream_;
-                int line_;
-                std::string basename_;
+{       
+    public:
+        enum LogLevel {
+            TRACE,
+            DEBUG,
+            INFO,
+            WARN,
+            ERROR,
+            FATAL,
+            NUM_LOG_LEVELS,
         };
 
-        RecordBlock Redcord;
-        static std::string logFileName_;
-        
-    public:
+        class SourceFile
+        {
+            public:
+                const char* data_;
+                int size_;
+
+                template<int N>
+                SourceFile(const char (&arr)[N]): data_(arr), size_(N - 1)
+                {
+                    const char *slash = strrchr(data_, '/');
+                    if (slash) {
+                        data_ = slash + 1;
+                        size_ = static_cast<int>(data_ - arr);
+                    }
+                }
+
+                explicit SourceFile(const char* filename): data_(filename)
+                {
+                    const char *slash = strrchr(filename, '/');
+                    if (slash) {
+                        data_ = slash + 1;
+                    }
+                    size_ = static_cast<int>(strlen(data_));
+                }
+        };
+
         Logger(const char *fileName, int line);
         ~Logger();
         LogStream& stream()
@@ -47,9 +69,38 @@ class Logger
         {
             return Redcord.stream_.buffer().data();
         }
+        
+     private:
+        class RecordBlock
+        {
+            public:
+                typedef Logger::LogLevel LogLevel;
+                RecordBlock(LogLevel level, int old_errno, const SourceFile& file, int line);
+                void formatTime();
+                void finish();
+
+                Timestamp time_;
+                LogStream stream_;
+                int line_;
+                std::string basename_;
+        };
+
+        RecordBlock Redcord;
+        static std::string logFileName_;
 };
+
+extern Logger::LogLevel g_logLevel;
+
+inline Logger::LogLevel Logger::logLevel()
+{
+    return g_logLevel;
+}
+
+const char *strerror_tl(int savedErrno);
 
 // 日志打印宏
 #define LOG Logger(__FILE__, __LINE__).stream()
+
+
 
 #endif

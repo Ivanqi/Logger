@@ -155,4 +155,25 @@ class LogStream: boost::noncopyable
         static const int kMaxNumericSize = 32;
 };
 
+class Fmt
+{
+    private:
+        char buf_[32];
+        int length_;
+    
+    public:
+        template<typename T>
+        Fmt(const char* fmt, T val);
+
+        const char* data() const
+        {
+            return buf_;
+        }
+
+        int length() const
+        {
+            return length_;
+        }
+};
+
 #endif

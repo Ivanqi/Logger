@@ -49,6 +49,11 @@ class Logger
         };
 
         Logger(const char *fileName, int line);
+        Logger(SourceFile file, int line);
+        Logger(SourceFile file, int line, LogLevel level);
+        Logger(SourceFile file, int line, LogLevel level, const char* func);
+        Logger(SourceFile file, int line, bool toAbort);
+
         ~Logger();
         LogStream& stream()
         {
@@ -69,6 +74,16 @@ class Logger
         {
             return Redcord.stream_.buffer().data();
         }
+
+        static LogLevel logLevel();
+        static void setLogLevel(LogLevel level);
+
+        typedef void (*OutputFunc)(const char* msg, int len);
+        typedef void (*FlushFunc)();
+
+        static void setOutput(OutputFunc);
+        static void setFlush(FlushFunc);
+        static void setTimeZone(const Timestamp& tz);
         
      private:
         class RecordBlock

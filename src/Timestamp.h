@@ -35,7 +35,7 @@ class Timestamp
             return microSecondsSinceEpoch_ > 0;
         }
 
-        int64_t microSencondsSinceEpoch() const
+        int64_t microSecondsSinceEpoch() const
         {
             return microSecondsSinceEpoch_;
         }
@@ -60,24 +60,24 @@ class Timestamp
 
 inline bool operator<(Timestamp lhs, Timestamp rhs)
 {
-    return lhs.microSencondsSinceEpoch() < rhs.microSencondsSinceEpoch();
+    return lhs.microSecondsSinceEpoch() < rhs.microSecondsSinceEpoch();
 }
 
 inline bool operator==(Timestamp lhs, Timestamp rhs)
 {
-    return lhs.microSencondsSinceEpoch() == rhs.microSencondsSinceEpoch();
+    return lhs.microSecondsSinceEpoch() == rhs.microSecondsSinceEpoch();
 }
 
 int double timeDifference(Timestamp high, Timestamp low)
 {
-    int64_t diff = high.microSencondsSinceEpoch() - low.microSencondsSinceEpoch();
+    int64_t diff = high.microSecondsSinceEpoch() - low.microSecondsSinceEpoch();
     return static_cast<double>(diff) / Timestamp::kMicroSecondsPerSecond; 
 }
 
 inline Timestamp addTime(Timestamp timestamp, double seconds)
 {
     int64_t delta = static_cast<int64_t>(seconds * Timestamp::kMicroSecondsPerSecond);
-    return Timestamp(timestamp.microSencondsSinceEpoch() + delta);
+    return Timestamp(timestamp.microSecondsSinceEpoch() + delta);
 }
 
 #endif

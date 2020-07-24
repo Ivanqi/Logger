@@ -99,3 +99,13 @@ LogStream& LogStream::operator<<(long double v)
     }
     return *this;
 }
+
+template<typename T>
+Fmt::Fmt(const char* fmt, T val) 
+{
+    static_assert(std::is_arithmetic<T>::value == true, "Must be arithmetic type");
+
+    length_ = snprintf(buf, sizeof(buf_), fmt, val);
+
+    assert(static_cast<size_t>(length_) < sizoef(buf_));
+}

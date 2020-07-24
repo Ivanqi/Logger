@@ -5,26 +5,26 @@
 #include <sys/time.h> 
 #include "Logging.h"
 #include "CurrentThread.h"
-#include "Thread.h"
-#include "AsyncLogging.h"
+// #include "Thread.h"
+// #include "AsyncLogging.h"
 #include "Timestamp.h"
 
-static pthread_once_t once_control_ = PTHREAD_ONCE_INIT;
-static AsyncLogging *AsyncLogger_;
+// static pthread_once_t once_control_ = PTHREAD_ONCE_INIT;
+// static AsyncLogging *AsyncLogger_;
 
-std::string Logger::logFileName_ = "/web.log";
+// std::string Logger::logFileName_ = "/web.log";
 
-void once_init()
-{
-    AsyncLogger_ = new AsyncLogging(Logger::getLogFileName());
-    AsyncLogger_->start();
-}
+// void once_init()
+// {
+//     AsyncLogger_ = new AsyncLogging(Logger::getLogFileName());
+//     AsyncLogger_->start();
+// }
 
-void output(const char* msg, int len)
-{
-    pthread_once(&once_control_, once_init);
-    AsyncLogger_->append(msg, len);
-}
+// void output(const char* msg, int len)
+// {
+//     pthread_once(&once_control_, once_init);
+//     AsyncLogger_->append(msg, len);
+// }
 
 __thread char t_errnobuf[512];
 __thread char t_time[64];
@@ -57,6 +57,21 @@ const char* LogLevelName[Logger::NUM_LOG_LEVELS] = {
     "FATAL ",
 };
 
+void defaultOutput(const char* msg, int len)
+{
+    size_t n = fwrite(msg, 1, len, stdout);
+    (void)n;
+}
+
+void defaultFlush()
+{
+    fflush(stdout);
+}
+
+Logger::OutputFunc g_output = defaultOutput;
+Logger::FlushFunc g_flush = defaultFlush;
+Timestamp g_logTimeZone;
+
 Logger::RecordBlock::RecordBlock(const char *fileName, int line)
     : stream_(), line_(line), basename_(fileName)
 {
@@ -65,22 +80,77 @@ Logger::RecordBlock::RecordBlock(const char *fileName, int line)
 
 // 记录当前时间
 void Logger::RecordBlock::formatTime() {
-    struct timeval tv;
-    time_t time;
-    char str_t[26] = {0};
+    // struct timeval tv;
+    // time_t time;
+    // char str_t[26] = {0};
 
-    gettimeofday(&tv, NULL);
-    time = tv.tv_sec;
+    // gettimeofday(&tv, NULL);
+    // time = tv.tv_sec;
 
-    struct tm* p_time = localtime(&time);
+    // struct tm* p_time = localtime(&time);
 
-    strftime(str_t, 26, "%Y-%m-%d %H:%M:%S\n", p_time);
-    stream_ << str_t;
+    // strftime(str_t, 26, "%Y-%m-%d %H:%M:%S\n", p_time);
+    // stream_ << str_t;
+    int64_t microSecondsSinceEpoch = time_.microSecondsSinceEpoch();
+    time_t seconds = static_assert<time_t>(microSecondsSinceEpoch / Timestamp::kMicroSecondsPerSecond);
+    int microseconds = static_cast<int> (microSecondsSinceEpoch % Timestamp::kMicroSecondsPerSecond);
+
+    if (seconds != t_lastSecond) {
+        t_lastSecond = seconds;
+        struct tm tm_time;
+        if (g_logTimeZone.vaild()) {
+            tm_time = g_logTimeZone.toLocalTime(seconds);
+        } else {
+            ::gmtime_r(&seconds, &tm_time);
+        }
+
+        int len = snprintf(t_time, sizeof(t_time), "%4d%02d%02d %02d:%02d:%02d"
+                tm_time.tm_year + 1900, tm_time.tm_mon + 1, tm_time.tm_mday,
+                tm_time.tm_hour, tm_time.tm_min, tm_time.tm_sec);
+        
+        assert(len == 17);
+        (void)len;
+    }
+
+    if (g_logTimeZone.vaild()) {
+        Fmt us(".%06d ", microseconds);
+        assert(us.length() == 8);
+        stream_ << T(t_time, 17) << T(us.data(), 8);
+    } else {
+        Fmt us(".%06dZ ", microseconds);
+        assert(us.length() == 9);
+        stream_ << T(t_time, 17) << T(us.data(), 9);
+    }
+}
+
+void Logger::RecordBlock::finish() 
+{
+    stream_ << " - " << basename_ << ':' << line_ << '\n';
 }
 
 Logger::Logger(const char *fileName, int line): Redcord(fileName, line) {}
+
+Logger::Logger(SourceFile file, int line): Redcord(INFO, 0, file, line)
+{
+}
+
+Logger::Logger(SourceFile file, int line, LogLevel level, const char* func): Redcord(level, 0, file, line)
+{
+    Redcord.stream_ << func << ' ';
+}
+
+Logger::Logger(SourceFile file, int line, LogLevel level): Redcord(level, 0, file, line)
+{
+}
+
+Logger::Logger(SourceFile file, int line, bool toAbort): Redcord(toAbort ? FATAL: ERROR, errno, file, line)
+{
+}
+
 Logger::~Logger() {
-    Redcord.stream_ << " -- " << Redcord.basename_ << ':' << Redcord.line_ << '\n';
+    // Redcord.stream_ << " -- " << Redcord.basename_ << ':' << Redcord.line_ << '\n';
+    // const LogStream::Buffer& buf(stream().buffer());
+    // output(buf.data(), buf.length());
+    Redcord.finish();
     const LogStream::Buffer& buf(stream().buffer());
-    output(buf.data(), buf.length());
 }

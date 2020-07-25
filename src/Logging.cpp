@@ -153,4 +153,29 @@ Logger::~Logger() {
     // output(buf.data(), buf.length());
     Redcord.finish();
     const LogStream::Buffer& buf(stream().buffer());
+    g_output(buf.data(), buf.length());
+    if (Redcord.level_ == FAFAL) {
+        g_flush();
+        abort();
+    }
+}
+
+void Logger::setLogLevel(Logger::LogLevel level) 
+{
+    g_logLevel = level;
+}
+
+void Logger::setOutput(OutputFunc out)
+{
+    g_output = out;
+}
+
+void Logger::setFlush(FlushFunc flush)
+{
+    g_flush = flush;
+}
+
+void Logger::setTimeZone(const TimeZone& tz)
+{
+    g_logTimeZone = tz;
 }

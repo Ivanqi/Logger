@@ -96,6 +96,7 @@ class Logger
 
                 Timestamp time_;
                 LogStream stream_;
+                LogLevel level_;
                 int line_;
                 std::string basename_;
         };
@@ -115,7 +116,8 @@ const char *strerror_tl(int savedErrno);
 
 // 日志打印宏
 #define LOG Logger(__FILE__, __LINE__).stream()
-
+#define LOG_INFO if (Logger::logLevel() <= Logger::INFO)    \
+    Logger(__FILE__, __LINE__).stream();
 
 
 #endif

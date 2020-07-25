@@ -37,6 +37,8 @@ void  AppendFile::append(const char* logline, const size_t len)
         n += x;
         remain = len - n;
     }
+
+    writtenBytes_ += len;
 }
 
 void AppendFile::flush()

@@ -12,18 +12,29 @@
 class LogFile: boost::noncopyable
 {
     private:
-        void append_unlocked(const char* logfile, int lne);
-
         const std::string basename_;
-        const int flushEveryN_;
+        const int flushInterval_;
+        const off_t rollSize_;
+        const int checkEveryN_;
 
         int count_;
         std::unique_ptr<MutexLock> mutex_;
         std::unique_ptr<AppendFile> file_;
 
+        time_t startOfPeriod_;
+        time_t lastRoll_;
+        time_t lastFlush_
+
+        const static int kRollPerSeconds_ = 60 * 60 * 24;
+
+    private:
+        void append_unlocked(const char* logfile, int lne);
+
+        static std::string getLogFileName(const std::string& basename, time_t* now);
+
     public:
-        // 每被append，flushEveryN次。 flush一下，会往文件写。文件也带有缓冲区
-        LogFile(const std::string& basename, int flushEveryN = 1024);
+        // 每被append，checkEveryN_次。 flush一下，会往文件写。文件也带有缓冲区
+        LogFile(const std::string& basename, int checkEveryN_ = 1024);
 
         ~LogFile();
 

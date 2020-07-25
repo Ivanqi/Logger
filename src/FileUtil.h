@@ -10,6 +10,7 @@ class AppendFile: boost::noncopyable
         size_t write(const char *logline, size_t len);
         FILE* fp_;
         char buffer_ [60 * 1024];
+        off_t writtenBytes_;
     public:
         explicit AppendFile(std::string filename);
 
@@ -19,6 +20,11 @@ class AppendFile: boost::noncopyable
         void append(const char *logline, const size_t len);
 
         void flush();
+
+        off_t writtenBytes() const
+        {
+            return writtenBytes_;
+        }
 };
 
 #endif

@@ -6,6 +6,7 @@
 #include <unistd.h>
 
 #include "FileUtil.h"
+#include "Types.h"
 
 AppendFile::AppendFile(std::string filename): fp_(fopen(filename.c_str(), "ae"))
 {
@@ -49,4 +50,40 @@ void AppendFile::flush()
 size_t AppendFile::write(const char* logline, size_t len)
 {
     return fwrite_unlocked(logline, 1, len, fp_);
+}
+
+size_t ReadSmallFile::ReadSmallFile(StringArg filename)
+    : fd_(::open(filename.c_str(), O_RDONLY | O_CLOEXEC)), err_(0)
+{
+    buf_[0] = '\0';
+    if (fd_ < 0) {
+        err_ = errno;
+    }
+}
+
+ReadSmallFile::~ReadSmallFile()
+{
+    if (fd_ >= 0) {
+        ::close(fd_);
+    }
+}
+
+template<typename String>
+int ReadSmallFile::readToString(int maxSize, String *content, int64_t *fileSize, int64_t *modifyTime, int64_t *createTime)
+{
+    static_assert(sizeof(off_t) == 8, "_FILE_OFFSET_BITS = 54");
+    assert(content != NULL);
+
+    int err = err_;
+    if (fd_ >= 0) {
+        content->clear();
+
+        if (fileSize) {
+            struct stat statbuf;
+            if (::fstat(fd_, &statbuf) == 0) {
+                *fileSize = statbuf.st_size;
+                content->reserve(static_cast<int>(std::min(implicit_cast<int64_t>(maxSize), *fileSIze)));
+            }
+        }
+    }
 }

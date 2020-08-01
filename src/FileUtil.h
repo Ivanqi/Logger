@@ -61,7 +61,8 @@ int readFile(StringArg filename,
     int64_t *modifyTime = NULL, 
     int64_t *createTime = NULL)
 {
-
+    ReadSmallFile file(filename);
+    return file.readToString(maxSize, content, fileSize, modifyTime, createTime);
 }
 
 #endif

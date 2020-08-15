@@ -1,4 +1,5 @@
 #include "ThreadPool.h"
+#include "Exception.h"
 
 ThreadPool::ThreadPool(const string& nameArg)
     :mutex_(), notEmpty_(mutex_), notFull_(mutex_),
@@ -113,11 +114,19 @@ void ThreadPool::runInThread()
             }
         }
 
-    } catch(...) {
+    } catch(const Exception& ex) {
+        fprintf(stderr, "exception caught in ThreadPool %s \n", name.c_str());
+        fprintf(stderr, "reason: %s\n", ex.what());
+        fprintf(stderr, "stack trace: %s\n", ex.stackTrace());
+        abort();
 
+    } catch(const std::exception& ex) {
+        fprintf(stderr, "exception caught in ThreadPool %s\n", name.c_str());
+        fprintf(stderr, "reason: %s\n", ex.what());
+        abort();
+        
     } catch(...) {
-
-    } catch(...) {
-
+        fprintf(stderr, "unknown exception caught in ThreadPool %s\n", name.c_str());
+        throw;
     }
 }

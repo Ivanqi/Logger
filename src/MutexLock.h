@@ -3,12 +3,16 @@
 
 #include <pthread.h>
 #include <cstdio>
+#include <assert.h>
+#include "CurrentThread.h"
 #include <boost/noncopyable.hpp>
 
 class MutexLock: boost::noncopyable 
 {
     private:
         pthread_mutex_t mutex;
+        pid_t holder_;
+
     public:
         MutexLock() 
         {
@@ -21,13 +25,25 @@ class MutexLock: boost::noncopyable
             pthread_mutex_destroy(&mutex);
         }
 
+        bool isLockedByThisThread() const
+        {
+            return holder_ == CurrentThread::tid(); 
+        }
+
+        void assertLocked() const
+        {
+            assert(isLockedByThisThread());
+        }
+
         void lock()
         {
             pthread_mutex_lock(&mutex);
+            assignHolder();
         }
 
         void unlock()
         {
+            unassignHolder();
             pthread_mutex_unlock(&mutex);
         }
 
@@ -38,6 +54,16 @@ class MutexLock: boost::noncopyable
     // 友元类不受访问权限影响
     private:
         friend class Condition;
+
+        void unassignHolder()
+        {
+            holder_ = 0;
+        }
+
+        void assignHolder()
+        {
+            holder_ = CurrentThread::tid();
+        }
 };
 
 class MutexLockGuard: boost::noncopyable

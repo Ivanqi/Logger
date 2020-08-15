@@ -131,3 +131,79 @@ string ProcessInfo::procStatus()
     FileUtil::readFile("/proc/self/status", 65535, &result);
     return result;
 }
+
+string ProcessInfo::procStat()
+{
+    string result;
+    FillUtil::readFile("/proc/self/stat", 65535, &result);
+    return result;
+}
+
+string ProcessInfo::threadStat()
+{
+    char buf[64];
+    snprintf(buf, sizeof(buf), "/proc/self/task/%d/stat", CurrentThread::tid());
+    string result;
+    FileUtil::readFile(buf, 65536, &result);
+}
+
+string ProcessInfo::exePath()
+{
+    string result;
+    char buf[1024];
+    ssize_t n = ::readlink("/proc/self/exe", buf, sizeof(buf));
+    if (n > 0) {
+        result.assign(buf, n);
+    }
+    return result;
+}
+
+int ProcessInfo::openedFiles()
+{
+    t_numOpenedFiles = 0;
+    scanDir("/proc/self/fd", fdDirFilter);
+    return t_numOpenedFiles;
+}
+
+int ProcessInfo::maxOpenfiles()
+{
+    struct rlimit rl;
+    if (::getrlimit(RLIMIT_NOFILE, &rl)) {
+        return openedFiles();
+    } else {
+        return static_cast<int>(rl.rlim_cur);
+    }
+}
+
+ProcessInfo::CpuTime ProcessInfo::cpuTime()
+{
+    ProcessInfo::CpuTime t;
+    struct tms tms;
+    if (::times(&tms) >= 0) {
+        const double hz = static_cast<duoble>(clockTicksPerSecond());
+        t.userSeconds = static_cast<double>(tms.tms_utime) / hz;
+        t.systemSeconds = static_cast<double>(tms.tms_stime) / hz;
+    }
+    return t;
+}
+
+int ProcessInfo::numThreads()
+{
+    int result = 0;
+    string status = procStatus();
+    size_t pos = status.find("Threads:");
+    if (pos != string::npos) {
+        result = ::atoi(status.c_str() + pos + 8);
+    }
+    return result;
+}
+
+std::vector<pid_t> ProcessInfo::threads()
+{
+    std::vecotr<pid_t> result;
+    t_pids = &result;
+    scanDir("/proc/self/task", taskDirFilter);
+    t_pids = NULL;
+    std::sort(result.begin(), result.end());
+    return result;
+}

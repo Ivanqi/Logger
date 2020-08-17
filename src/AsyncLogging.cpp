@@ -6,10 +6,11 @@
 #include "AsyncLogging.h"
 #include "LogFile.h"
 
-AsyncLogging::AsyncLogging(std::string logFileName_, int flushInterval)
+AsyncLogging::AsyncLogging(std::string logFileName_, off_t rollSize, int flushInterval)
     :flushInterval_(flushInterval),
     running_(false),
     basename_(logFileName_),
+    rollSize(rollSize)
     thread_(std::bind(&AsyncLogging::threadFunc, this), "Logging"),
     mutex_(),
     cond_(mutex_),

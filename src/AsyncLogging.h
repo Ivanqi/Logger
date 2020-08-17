@@ -11,7 +11,7 @@
 #include "Thread.h"
 #include "LogStream.h"
 
-class AsyncLogging
+class AsyncLogging: noncopyable
 {
     public:
         void threadFunc();
@@ -21,6 +21,7 @@ class AsyncLogging
         const int flushInterval_;
         bool running_;
         std::string basename_;
+        const off_t rollSize;
         Thread thread_;
         MutexLock mutex_;
         Condition cond_;
@@ -35,7 +36,7 @@ class AsyncLogging
         BufferVector buffers_;
         CountDownLatch latch_;
     public:
-        AsyncLogging(const std::string basename, int flushInterval = 2);
+        AsyncLogging(const std::string basename, off_t rollSize, int flushInterval = 3);
 
         ~AsyncLogging() 
         {

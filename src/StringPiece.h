@@ -120,7 +120,7 @@ class StringPiece
 
         bool operator==(const StringPiece& x) const
         {
-            return ((length_ == x.length_) && (memcmp(ptr_, x.ptr_, length_) == 0))
+            return ((length_ == x.length_) && (memcmp(ptr_, x.ptr_, length_) == 0));
         }
 
         bool operator!=(const StringPiece& x) const
@@ -162,7 +162,7 @@ class StringPiece
 
         bool starts_with(const StringPiece& x) const
         {
-            return ((length_ >= x.length_) && (memcmp(ptr_, x.ptr_, x.length_) == 0))
+            return ((length_ >= x.length_) && (memcmp(ptr_, x.ptr_, x.length_) == 0));
         }
 };
 

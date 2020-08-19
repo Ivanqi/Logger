@@ -1,5 +1,6 @@
 #include "ThreadPool.h"
 #include "Exception.h"
+#include <assert.h>
 
 ThreadPool::ThreadPool(const string& nameArg)
     :mutex_(), notEmpty_(mutex_), notFull_(mutex_),
@@ -12,7 +13,7 @@ ThreadPool::~ThreadPool()
     if (running_) {
         stop();
     }
-}
+}   
 
 void ThreadPool::start(int numThreads)
 {
@@ -56,7 +57,7 @@ size_t ThreadPool::queueSize() const
 
 void ThreadPool::run(Task task)
 {
-    if (threads.empty()) {
+    if (threads_.empty()) {
         task();
     } else {
         MutexLockGuard lock(mutex_);
@@ -73,7 +74,7 @@ void ThreadPool::run(Task task)
     }
 }
 
-ThreadPool::Task ThreadPool::task()
+ThreadPool::Task ThreadPool::take()
 {
     MutexLockGuard lock(mutex_);
 
@@ -94,7 +95,7 @@ ThreadPool::Task ThreadPool::task()
     return task;
 }
 
-bool ThreadPool::isFull const
+bool ThreadPool::isFull() const
 {
     mutex_.assertLocked();
     return maxQueueSize_ > 0 && queue_.size() >= maxQueueSize_;
@@ -115,18 +116,18 @@ void ThreadPool::runInThread()
         }
 
     } catch(const Exception& ex) {
-        fprintf(stderr, "exception caught in ThreadPool %s \n", name.c_str());
+        fprintf(stderr, "exception caught in ThreadPool %s \n", name_.c_str());
         fprintf(stderr, "reason: %s\n", ex.what());
         fprintf(stderr, "stack trace: %s\n", ex.stackTrace());
         abort();
 
     } catch(const std::exception& ex) {
-        fprintf(stderr, "exception caught in ThreadPool %s\n", name.c_str());
+        fprintf(stderr, "exception caught in ThreadPool %s\n", name_.c_str());
         fprintf(stderr, "reason: %s\n", ex.what());
         abort();
         
     } catch(...) {
-        fprintf(stderr, "unknown exception caught in ThreadPool %s\n", name.c_str());
+        fprintf(stderr, "unknown exception caught in ThreadPool %s\n", name_.c_str());
         throw;
     }
 }

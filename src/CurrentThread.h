@@ -1,6 +1,7 @@
 #ifndef LOGGER_CURRENTTHREAD_H
 #define LOGGER_CURRENTTHREAD_H
 
+#include "Types.h"
 #include <stdint.h>
 
 namespace CurrentThread 
@@ -31,5 +32,7 @@ namespace CurrentThread
     {
         return t_threadName;
     }
+
+    string stackTrace(bool demangle);
 }
 #endif

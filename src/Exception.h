@@ -3,9 +3,9 @@
 #include "Types.h"
 #include <exception>
 
-class Exception: public std::exception
+class Exception : public std::exception
 {
-    private
+    private:
         string message_;
         string stack_;
 
@@ -22,7 +22,6 @@ class Exception: public std::exception
         {
             return stack_.c_str();
         }
-
-}
+};
 
 #endif

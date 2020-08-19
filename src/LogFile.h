@@ -23,7 +23,7 @@ class LogFile: boost::noncopyable
 
         time_t startOfPeriod_;
         time_t lastRoll_;
-        time_t lastFlush_
+        time_t lastFlush_;
 
         const static int kRollPerSeconds_ = 60 * 60 * 24;
 
@@ -34,7 +34,7 @@ class LogFile: boost::noncopyable
 
     public:
         // 每被append，checkEveryN_次。 flush一下，会往文件写。文件也带有缓冲区
-        LogFile(const std::string& basename, int checkEveryN_ = 1024);
+        LogFile(const std::string& basename, off_t rollSize, bool threadSafe = true, int flushInterval = 3, int checkEveryN_ = 1024);
 
         ~LogFile();
 
@@ -43,7 +43,7 @@ class LogFile: boost::noncopyable
         
         void flush();
 
-        void rollFile();
+        bool rollFile();
 };
 
 #endif

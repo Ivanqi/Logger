@@ -51,7 +51,7 @@ namespace PrcoessInfo
         double userSeconds;
         double systemSeconds;
 
-        CpuTime(): userSeconds(0.0), systemSeconds(0, 0) {}
+        CpuTime(): userSeconds(0.0), systemSeconds(0.0) {}
 
         double total() const
         {

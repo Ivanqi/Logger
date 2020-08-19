@@ -4,17 +4,24 @@
 
 #include "LogFile.h"
 #include "FileUtil.h"
+#include "ProcessInfo.h"
 
-LogFile::LogFile(const std::string& basename, int checkEveryN_)
+LogFile::LogFile(const std::string& basename, off_t rollSize, bool threadSafe, int flushInterval, int checkEveryN_)
     :basename_(basename),
+    rollSize_(rollSize),
+    flushInterval_(flushInterval),
     checkEveryN_(checkEveryN_),
     count_(0),
-    mutex_(new MutexLock)
+    mutex_(threadSafe ? new MutexLock : NULL),
+    startOfPeriod_(0),
+    lastRoll_(0),
+    lastFlush_(0)
 {
-    file_.reset(new AppendFile(basename));
+    assert(basename.find('/') == string::npos);
+    rollFile();
 }
 
-LogFile::~LogFile() {}
+LogFile::~LogFile() = default;
 
 void LogFile::append(const char* logline, int len)
 {

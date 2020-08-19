@@ -1,5 +1,5 @@
 PROJECT := $(shell pwd)
-SRCDIR  := $(PROJECT)/..
+SRCDIR  := $(PROJECT)/../../
 TEST := $(wildcard $(PROJECT)/*.cpp)
 SRC := $(wildcard $(SRCDIR)/src/*.cpp)
 override SRC := $(SRC) $(TEST) 

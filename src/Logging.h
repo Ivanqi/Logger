@@ -8,6 +8,7 @@
 
 #include "LogStream.h"
 #include "Timestamp.h"
+#include "TimeZone.h"
 
 class Logger
 {       
@@ -83,7 +84,7 @@ class Logger
 
         static void setOutput(OutputFunc);
         static void setFlush(FlushFunc);
-        static void setTimeZone(const Timestamp& tz);
+        static void setTimeZone(const TimeZone& tz);
         
      private:
         class RecordBlock
@@ -98,7 +99,7 @@ class Logger
                 LogStream stream_;
                 LogLevel level_;
                 int line_;
-                std::string basename_;
+                SourceFile basename_;
         };
 
         RecordBlock Redcord;

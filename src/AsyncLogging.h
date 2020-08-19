@@ -11,7 +11,7 @@
 #include "Thread.h"
 #include "LogStream.h"
 
-class AsyncLogging: noncopyable
+class AsyncLogging: boost::noncopyable
 {
     public:
         void threadFunc();
@@ -21,7 +21,7 @@ class AsyncLogging: noncopyable
         const int flushInterval_;
         bool running_;
         std::string basename_;
-        const off_t rollSize;
+        const off_t rollSize_;
         Thread thread_;
         MutexLock mutex_;
         Condition cond_;

@@ -88,11 +88,11 @@ std::string LogFile::getLogFileName(const std::string& basename, time_t* now)
     strftime(timebuf, sizeof(timebuf), ".%Y%m%d-%H%M%S.", &tm);
     filename += timebuf;
 
-    filename += ProcessInfo::hostname();
+    filename += PrcoessInfo::hostname();
 
     char pidbuf[32];
 
-    snprintf(pidbuf, sizeof(pidbuf), ".%d", ProcessInfo::pid());
+    snprintf(pidbuf, sizeof(pidbuf), ".%d", PrcoessInfo::pid());
     filename += pidbuf;
 
     filename += ".log";

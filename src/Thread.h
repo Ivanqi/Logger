@@ -1,6 +1,7 @@
 #ifndef LOGGER_THREAD_H
 #define LOGGER_THREAD_H
 
+#include <Types.h>
 #include <functional>
 #include <memory>
 #include <pthread.h>
@@ -21,12 +22,12 @@ class Thread: boost::noncopyable
         pthread_t pthreadId_;
         pid_t tid_;
         ThreadFunc func_;
-        std::string name_;
+        string name_;
         CountDownLatch latch_;
 
     public:
 
-        explicit Thread (const ThreadFunc&, const std::string& name = std::string());
+        explicit Thread (const ThreadFunc&, const string& name = string());
 
         ~Thread();
         
@@ -37,6 +38,16 @@ class Thread: boost::noncopyable
         bool started() const {
             return started_;
         };
+
+        pid_t tid() const
+        {
+            return tid_;
+        }
+
+        const string& name() const
+        {
+            return name_;
+        }
     private:
         void setDefaultName();
 };

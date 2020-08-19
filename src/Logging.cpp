@@ -8,6 +8,7 @@
 // #include "Thread.h"
 // #include "AsyncLogging.h"
 #include "Timestamp.h"
+#include "TimeZone.h"
 
 // static pthread_once_t once_control_ = PTHREAD_ONCE_INIT;
 // static AsyncLogging *AsyncLogger_;
@@ -57,6 +58,31 @@ const char* LogLevelName[Logger::NUM_LOG_LEVELS] = {
     "FATAL ",
 };
 
+// helper class for know string length at compile time
+class T
+{
+    public:
+        const char *str_;
+        const unsigned len_;
+
+        T(const char* str, unsigned len): str_(str), len_(len)
+        {
+            assert(strlen(str) == len_);
+        }
+};
+
+inline LogStream& operator <<(LogStream&s, T v)
+{
+    s.append(v.str_, v.len_);
+    return s;
+}
+
+inline LogStream& operator<<(LogStream& s, const Logger::SourceFile& v)
+{
+    s.append(v.data_, v.size_);
+    return s;
+}
+
 void defaultOutput(const char* msg, int len)
 {
     size_t n = fwrite(msg, 1, len, stdout);
@@ -70,10 +96,10 @@ void defaultFlush()
 
 Logger::OutputFunc g_output = defaultOutput;
 Logger::FlushFunc g_flush = defaultFlush;
-Timestamp g_logTimeZone;
+TimeZone g_logTimeZone;
 
-Logger::RecordBlock::RecordBlock(const char *fileName, int line)
-    : stream_(), line_(line), basename_(fileName)
+Logger::RecordBlock::RecordBlock(LogLevel level, int savedErrno, const SourceFile& file,int line)
+    : stream_(), line_(line), basename_(file), level_(level), time_(Timestamp::now())
 {
     formatTime();
 }
@@ -92,27 +118,27 @@ void Logger::RecordBlock::formatTime() {
     // strftime(str_t, 26, "%Y-%m-%d %H:%M:%S\n", p_time);
     // stream_ << str_t;
     int64_t microSecondsSinceEpoch = time_.microSecondsSinceEpoch();
-    time_t seconds = static_assert<time_t>(microSecondsSinceEpoch / Timestamp::kMicroSecondsPerSecond);
+    time_t seconds = static_cast<time_t>(microSecondsSinceEpoch / Timestamp::kMicroSecondsPerSecond);
     int microseconds = static_cast<int> (microSecondsSinceEpoch % Timestamp::kMicroSecondsPerSecond);
 
     if (seconds != t_lastSecond) {
         t_lastSecond = seconds;
         struct tm tm_time;
-        if (g_logTimeZone.vaild()) {
+        if (g_logTimeZone.valid()) {
             tm_time = g_logTimeZone.toLocalTime(seconds);
         } else {
             ::gmtime_r(&seconds, &tm_time);
         }
 
-        int len = snprintf(t_time, sizeof(t_time), "%4d%02d%02d %02d:%02d:%02d"
-                tm_time.tm_year + 1900, tm_time.tm_mon + 1, tm_time.tm_mday,
-                tm_time.tm_hour, tm_time.tm_min, tm_time.tm_sec);
+        int len = snprintf(t_time, sizeof(t_time), "%4d%02d%02d %02d:%02d:%02d",
+            tm_time.tm_year + 1900, tm_time.tm_mon + 1, tm_time.tm_mday,
+            tm_time.tm_hour, tm_time.tm_min, tm_time.tm_sec);
         
         assert(len == 17);
         (void)len;
     }
 
-    if (g_logTimeZone.vaild()) {
+    if (g_logTimeZone.valid()) {
         Fmt us(".%06d ", microseconds);
         assert(us.length() == 8);
         stream_ << T(t_time, 17) << T(us.data(), 8);
@@ -154,7 +180,7 @@ Logger::~Logger() {
     Redcord.finish();
     const LogStream::Buffer& buf(stream().buffer());
     g_output(buf.data(), buf.length());
-    if (Redcord.level_ == FAFAL) {
+    if (Redcord.level_ == FATAL) {
         g_flush();
         abort();
     }

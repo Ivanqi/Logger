@@ -10,7 +10,7 @@ AsyncLogging::AsyncLogging(std::string logFileName_, off_t rollSize, int flushIn
     :flushInterval_(flushInterval),
     running_(false),
     basename_(logFileName_),
-    rollSize(rollSize)
+    rollSize_(rollSize),
     thread_(std::bind(&AsyncLogging::threadFunc, this), "Logging"),
     mutex_(),
     cond_(mutex_),
@@ -19,7 +19,6 @@ AsyncLogging::AsyncLogging(std::string logFileName_, off_t rollSize, int flushIn
     buffers_(),
     latch_(1)
 {
-    assert(logFileName_.size() > 1);
     currentBuffer_->bzero();
     nextBuffer_->bzero();
     buffers_.reserve(16);
@@ -51,7 +50,7 @@ void AsyncLogging::threadFunc()
     latch_.countDown();
 
     // 直接IO的日志文件
-    LogFile output(basename_);
+    LogFile output(basename_, rollSize_, false);
 
     // 后端准备两个 Buffer, 预防临界区(超时，currentBuffer 写满)
     BufferPtr newBuffer1(new Buffer);

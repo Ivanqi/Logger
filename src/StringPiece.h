@@ -4,7 +4,8 @@
 #include <string.h>
 #include <iosfwd>
 
-using std::string;
+#include "Types.h"
+
 class StringArg
 {
     private:
@@ -16,7 +17,7 @@ class StringArg
 
         }
 
-        StringArg(const string& str):  str_(str.c_str())
+        StringArg(const string& str): str_(str.c_str())
         {
 
         }

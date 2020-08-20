@@ -263,7 +263,7 @@ time_t TimeZone::fromLocalTime(const struct tm& localTm) const
     time_t seconds = ::timegm(&tmp);
     Transition sentry(0, seconds, 0);
 
-    const detail::Localtime *local = findLocaltime(data, sentry, Comp(false));
+    const Localtime *local = findLocaltime(data, sentry, Comp(false));
 
     if (localTm.tm_isdst) {
         struct tm tryTm = toLocalTime(seconds - local->gmtOffset);

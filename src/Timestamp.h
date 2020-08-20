@@ -1,7 +1,8 @@
 #ifndef LOGGER_TIMESTAMP_H
 #define LOGGER_TIMESTAMP_H
+
 #include <stdint.h>
-#include <string>
+#include "Types.h"
 
 class Timestamp
 {

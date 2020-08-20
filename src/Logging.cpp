@@ -98,10 +98,18 @@ Logger::OutputFunc g_output = defaultOutput;
 Logger::FlushFunc g_flush = defaultFlush;
 TimeZone g_logTimeZone;
 
-Logger::RecordBlock::RecordBlock(LogLevel level, int savedErrno, const SourceFile& file,int line)
-    : stream_(), line_(line), basename_(file), level_(level), time_(Timestamp::now())
+Logger::RecordBlock::RecordBlock(LogLevel level, int savedErrno, const SourceFile& file, int line) 
+    : time_(Timestamp::now()), stream_(), level_(level), line_(line), basename_(file)
 {
-    formatTime();
+  formatTime();
+
+  CurrentThread::tid();
+  stream_ << T(CurrentThread::tidString(), CurrentThread::tidStringLength());
+  stream_ << T(LogLevelName[level], 6);
+  
+  if (savedErrno != 0) {
+    stream_ << strerror_tl(savedErrno) << " (errno=" << savedErrno << ") ";
+  }
 }
 
 // 记录当前时间
@@ -153,8 +161,6 @@ void Logger::RecordBlock::finish()
 {
     stream_ << " - " << basename_ << ':' << line_ << '\n';
 }
-
-Logger::Logger(const char *fileName, int line): Redcord(fileName, line) {}
 
 Logger::Logger(SourceFile file, int line): Redcord(INFO, 0, file, line)
 {

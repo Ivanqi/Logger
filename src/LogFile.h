@@ -2,20 +2,19 @@
 #define LOGGER_LOGFILE_H
 
 #include <memory>
-#include <string>
-#include <unistd.h>
-#include <time.h>
-#include <boost/noncopyable.hpp>
 
-#include "FileUtil.h"
+#include "Types.h"
 #include "MutexLock.h"
+#include "FileUtil.h"
+
+#include <boost/noncopyable.hpp>
 
 class LogFile: boost::noncopyable
 {
     private:
-        const std::string basename_;
-        const int flushInterval_;
+        const string basename_;
         const off_t rollSize_;
+        const int flushInterval_;
         const int checkEveryN_;
 
         int count_;
@@ -31,12 +30,11 @@ class LogFile: boost::noncopyable
     private:
         void append_unlocked(const char* logfile, int lne);
 
-        static std::string getLogFileName(const std::string& basename, time_t* now);
+        static string getLogFileName(const string& basename, time_t* now);
 
     public:
         // 每被append，checkEveryN_次。 flush一下，会往文件写。文件也带有缓冲区
-        LogFile(const std::string& basename, off_t rollSize, bool threadSafe = true, int flushInterval = 3, int checkEveryN_ = 1024);
-
+        LogFile(const string& basename, off_t rollSize, bool threadSafe = true, int flushInterval = 3, int checkEveryN = 1024);
         ~LogFile();
 
         // 写文件 append

@@ -11,7 +11,8 @@ const int kSmallBuffer = 4000;
 const int kLargeBuffer = 4000 * 1000;
 
 template<int SIZE> 
-class FixedBuffer : boost::noncopyable {
+class FixedBuffer : boost::noncopyable 
+{
     private:
         char data_[SIZE];
         char* cur_;
@@ -175,5 +176,11 @@ class Fmt
             return length_;
         }
 };
+
+inline LogStream& operator <<(LogStream& s, const Fmt& fmt)
+{
+    s.append(fmt.data(), fmt.length());
+    return s;
+}
 
 #endif

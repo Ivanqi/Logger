@@ -49,7 +49,6 @@ class Logger
                 }
         };
 
-        Logger(const char *fileName, int line);
         Logger(SourceFile file, int line);
         Logger(SourceFile file, int line, LogLevel level);
         Logger(SourceFile file, int line, LogLevel level, const char* func);
@@ -91,15 +90,15 @@ class Logger
         {
             public:
                 typedef Logger::LogLevel LogLevel;
-                RecordBlock(LogLevel level, int old_errno, const SourceFile& file, int line);
-                void formatTime();
-                void finish();
-
                 Timestamp time_;
                 LogStream stream_;
                 LogLevel level_;
                 int line_;
                 SourceFile basename_;
+
+                RecordBlock(LogLevel level, int old_errno, const SourceFile& file, int line);
+                void formatTime();
+                void finish();
         };
 
         RecordBlock Redcord;
@@ -116,16 +115,14 @@ inline Logger::LogLevel Logger::logLevel()
 const char *strerror_tl(int savedErrno);
 
 // 日志打印宏
-#define LOG Logger(__FILE__, __LINE__).stream()
-
-#define LOG_INFO if (Logger::logLevel() <= Logger::INFO)  \
-    Logger(__FILE__, __LINE__).stream();
+#define LOG_TRACE if (Logger::logLevel() <= Logger::TRACE) \
+  Logger(__FILE__, __LINE__, Logger::TRACE, __func__).stream()
 
 #define LOG_DEBUG if (Logger::logLevel() <= Logger::DEBUG) \
-    Logger(__FILE__, __LINE__, Logger::DEBUG, __func__).stream();
+  Logger(__FILE__, __LINE__, Logger::DEBUG, __func__).stream()
 
-#define LOG_TRACE if (Logger::logLevel() <= Logger::TRACE) \
-    Logger(__FILE__, __LINE__, Logger::TRACE, __func__).stream();
+#define LOG_INFO if (Logger::logLevel() <= Logger::INFO) \
+  Logger(__FILE__, __LINE__).stream()
 
 #define LOG_WARN Logger(__FILE__, __LINE__, Logger::WARN).stream()
 

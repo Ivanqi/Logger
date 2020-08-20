@@ -63,15 +63,15 @@ int main() {
     pool.run(logInThread);
     pool.run(logInThread);
 
-    // LOG_TRACE << "trace";
-    // LOG_DEBUG << "debug";
-    // LOG_INFO << "Hello";
-    // LOG_WARN << "World";
-    // LOG_ERROR << "Error";
-    // LOG_INFO << sizeof(Logger);
-    // LOG_INFO << sizeof(LogStream);
-    // LOG_INFO << sizeof(Fmt);
-    // LOG_INFO << sizeof(LogStream::Buffer);
+    LOG_TRACE << "trace";
+    LOG_DEBUG << "debug";
+    LOG_INFO << "Hello";
+    LOG_WARN << "World";
+    LOG_ERROR << "Error";
+    LOG_INFO << sizeof(Logger);
+    LOG_INFO << sizeof(LogStream);
+    LOG_INFO << sizeof(Fmt);
+    LOG_INFO << sizeof(LogStream::Buffer);
 
     sleep(1);
     bench("nop");
@@ -101,20 +101,20 @@ int main() {
         sleep(1);
         TimeZone beijing(8*3600, "CST");
         Logger::setTimeZone(beijing);
-        // LOG_TRACE << "trace CST";
-        // LOG_DEBUG << "debug CST";
-        // LOG_INFO << "Hello CST";
-        // LOG_WARN << "World CST";
-        // LOG_ERROR << "Error CST";
+        LOG_TRACE << "trace CST";
+        LOG_DEBUG << "debug CST";
+        LOG_INFO << "Hello CST";
+        LOG_WARN << "World CST";
+        LOG_ERROR << "Error CST";
 
         sleep(1);
         TimeZone newyork("/usr/share/zoneinfo/America/New_York");
         Logger::setTimeZone(newyork);
-        // LOG_TRACE << "trace NYT";
-        // LOG_DEBUG << "debug NYT";
-        // LOG_INFO << "Hello NYT";
-        // LOG_WARN << "World NYT";
-        // LOG_ERROR << "Error NYT";
+        LOG_TRACE << "trace NYT";
+        LOG_DEBUG << "debug NYT";
+        LOG_INFO << "Hello NYT";
+        LOG_WARN << "World NYT";
+        LOG_ERROR << "Error NYT";
         g_file = NULL;
     }
 

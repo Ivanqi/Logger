@@ -6,19 +6,19 @@
 #include "FileUtil.h"
 #include "ProcessInfo.h"
 
-LogFile::LogFile(const std::string& basename, off_t rollSize, bool threadSafe, int flushInterval, int checkEveryN_)
-    :basename_(basename),
+LogFile::LogFile(const string& basename, off_t rollSize, bool threadSafe, int flushInterval, int checkEveryN)
+  : basename_(basename),
     rollSize_(rollSize),
     flushInterval_(flushInterval),
-    checkEveryN_(checkEveryN_),
+    checkEveryN_(checkEveryN),
     count_(0),
     mutex_(threadSafe ? new MutexLock : NULL),
     startOfPeriod_(0),
     lastRoll_(0),
     lastFlush_(0)
 {
-    assert(basename.find('/') == string::npos);
-    rollFile();
+  assert(basename.find('/') == string::npos);
+  rollFile();
 }
 
 LogFile::~LogFile() = default;
@@ -59,7 +59,7 @@ void LogFile::append_unlocked(const char* logline, int len)
 bool LogFile::rollFile()
 {
     time_t now = 0;
-    std::string filename = getLogFileName(basename_, &now);
+    string filename = getLogFileName(basename_, &now);
     time_t start = now / kRollPerSeconds_ * kRollPerSeconds_;
 
     if (now > lastRoll_) {
@@ -73,9 +73,9 @@ bool LogFile::rollFile()
     }
 }
 
-std::string LogFile::getLogFileName(const std::string& basename, time_t* now)
+string LogFile::getLogFileName(const string& basename, time_t* now)
 {
-    std::string filename;
+    string filename;
     filename.reserve(basename.size() + 64);
     filename = basename;
 

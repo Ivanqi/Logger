@@ -8,7 +8,7 @@
 
 using std::string;
 
-namespace PrcoessInfo
+namespace ProcessInfo
 {
     pid_t pid();
     string pidString();
@@ -32,7 +32,7 @@ namespace PrcoessInfo
     StringPiece procname(const string& stat);
 
     // read /proc/self/status
-    string proceStatus();
+    string procStatus();
 
     // read /proc/self/stat
     string procStat();

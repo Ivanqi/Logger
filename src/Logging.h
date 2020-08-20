@@ -117,7 +117,8 @@ const char *strerror_tl(int savedErrno);
 
 // 日志打印宏
 #define LOG Logger(__FILE__, __LINE__).stream()
-#define LOG_INFO if (Logger::logLevel() <= Logger::INFO)    \
+
+#define LOG_INFO if (Logger::logLevel() <= Logger::INFO)  \
     Logger(__FILE__, __LINE__).stream();
 
 #define LOG_DEBUG if (Logger::logLevel() <= Logger::DEBUG) \
@@ -126,7 +127,7 @@ const char *strerror_tl(int savedErrno);
 #define LOG_TRACE if (Logger::logLevel() <= Logger::TRACE) \
     Logger(__FILE__, __LINE__, Logger::TRACE, __func__).stream();
 
-#define LOG_WARN Logger(__FILE__, __LINE__, ogger::WARN).stream()
+#define LOG_WARN Logger(__FILE__, __LINE__, Logger::WARN).stream()
 
 #define LOG_ERROR Logger(__FILE__, __LINE__, Logger::ERROR).stream()
 

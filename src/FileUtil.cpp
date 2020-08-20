@@ -52,7 +52,7 @@ size_t AppendFile::write(const char* logline, size_t len)
     return fwrite_unlocked(logline, 1, len, fp_);
 }
 
-size_t ReadSmallFile::ReadSmallFile(StringArg filename)
+ReadSmallFile::ReadSmallFile(StringArg filename)
     : fd_(::open(filename.c_str(), O_RDONLY | O_CLOEXEC)), err_(0)
 {
     buf_[0] = '\0';
@@ -82,7 +82,7 @@ int ReadSmallFile::readToString(int maxSize, String *content, int64_t *fileSize,
             struct stat statbuf;
             if (::fstat(fd_, &statbuf) == 0) {
                 *fileSize = statbuf.st_size;
-                content->reserve(static_cast<int>(std::min(implicit_cast<int64_t>(maxSize), *fileSIze)));
+                content->reserve(static_cast<int>(std::min(implicit_cast<int64_t>(maxSize), *fileSize)));
             } else if (S_ISDIR(statbuf.st_mode)) {
                 err = EISDIR;
             }

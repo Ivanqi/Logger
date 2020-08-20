@@ -1,6 +1,3 @@
-#include "TimeZone.h"
-#include "Date.h"
-
 #include <algorithm>
 #include <stdexcept>
 #include <string>
@@ -10,14 +7,18 @@
 #include <endian.h>
 #include <stdint.h>
 #include <stdio.h>
+
+#include "TimeZone.h"
+#include "Date.h"
 using namespace std;
 
 struct Transition
 {
     time_t gmttime;
     time_t localtime;
+    int localtimeIdx;
 
-    Transition(time_t t, time_t l, int localIdx): gmttime(t), localtime(localIdx)
+    Transition(time_t t, time_t l, int localIdx): gmttime(t), localtime(l), localtimeIdx(localIdx)
     {
     }
 };
@@ -42,7 +43,7 @@ struct Comp
     bool equal(const Transition& lhs, const Transition& rhs) const
     {
         if (compareGmt) {
-            return lhs.gmtime == rhs.gmttime;
+            return lhs.gmttime == rhs.gmttime;
         } else {
             return lhs.localtime == rhs.localtime;
         }
@@ -60,7 +61,7 @@ struct Localtime
     }
 };
 
-inline void fileHM5(unsigned seconds, struct tm* utc)
+inline void fillHMS(unsigned seconds, struct tm* utc)
 {
     utc->tm_sec = seconds % 60;
     unsigned minutes = seconds / 60;
@@ -84,7 +85,7 @@ class File
         FILE* fp_;
 
     public:
-        File(const char* file): fp_(::open(file, "rb"))
+        File(const char* file): fp_(::fopen(file, "rb"))
         {
         }
 
@@ -103,7 +104,7 @@ class File
         string readBytes(int n)
         {
             char buf[n];
-            sszie_t nr = ::fread(buf, 1, n, fp_);
+            ssize_t nr = ::fread(buf, 1, n, fp_);
             if (nr != n) {
                 throw logic_error("no enough data");
             }
@@ -175,7 +176,7 @@ bool readTimeZoneFile(const char* zonefile, struct TimeZone::Data* data)
             for (int i = 0; i < timecnt; ++i) {
                 int localIdx = localtimes[i];
                 time_t localtime = trans[i] + data->localtimes[localIdx].gmtOffset;
-                data->transitions.push_back(Transition(trans[i], localtimes, localIdx));
+                data->transitions.push_back(Transition(trans[i], localtime, localIdx));
             }
 
             data->abbreviation = f.readBytes(charcnt);
@@ -204,22 +205,24 @@ const Localtime* findLocaltime(const TimeZone::Data& data, Transition sentry, Co
         local = &data.localtimes.front();
     } else {
         vector<Transition>::const_iterator transI = lower_bound(data.transitions.begin(), data.transitions.end(), sentry, comp);
+
+        if (transI != data.transitions.end()) {
+            if (!comp.equal(sentry, *transI)) {
+                assert(transI != data.transitions.begin());
+                --transI;
+            }
+            local = &data.localtimes[transI->localtimeIdx];
+        } else {
+            local = &data.localtimes[data.transitions.back().localtimeIdx];
+        }
     }
 
-    if (transI != data.transitions.end()) {
-        if (!comp.equal(sentry, *transI)) {
-            assert(transI != data.transitions.begin());
-            --transI;
-        }
-        local = &data.localtimes[transI->localtimeIdx];
-    } else {
-        local = &data.localtimes[data.transitions.back().localtimeIdx];
-    }
+    return local;
 }
 
 TimeZone::TimeZone(const char* zonefile): data_(new TimeZone::Data)
 {
-    if (!detail::readTimeZoneFile(zonefile, data_.get())) {
+    if (!readTimeZoneFile(zonefile, data_.get())) {
         data_.reset();
     }
 }
@@ -230,7 +233,7 @@ TimeZone::TimeZone(int eastOfUtc, const char* name): data_(new TimeZone::Data)
     data_->abbreviation = name;
 }
 
-struct tm Timezone::toLocalTime(time_t seconds) const
+struct tm TimeZone::toLocalTime(time_t seconds) const
 {
     struct tm localTime;
     memZero(&localTime, sizeof(localTime));
@@ -238,7 +241,7 @@ struct tm Timezone::toLocalTime(time_t seconds) const
     const Data& data(*data_);
 
     Transition sentry(seconds, 0, 0);
-    const detail::Localtime* local = findLocaltime(data, sentry, Comp(true));
+    const Localtime* local = findLocaltime(data, sentry, Comp(true));
 
     if (local) {
         time_t localSeconds = seconds + local->gmtOffset;
@@ -276,7 +279,7 @@ struct tm TimeZone::toUtcTime(time_t secondsSinceEpoch, bool yday)
 {
     struct tm utc;
     memZero(&utc, sizeof(utc));
-    utc.tm_zero = "GMT";
+    utc.tm_zone = "GMT";
 
     int seconds = static_cast<int>(secondsSinceEpoch % kSecondsPerDay);
     int days = static_cast<int>(secondsSinceEpoch / kSecondsPerDay);

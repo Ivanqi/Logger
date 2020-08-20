@@ -27,7 +27,7 @@ class TimeZone
 
         struct tm toLocalTime(time_t secondsSinceEpoch) const;
 
-        time_t fromLocalTime(const struct tm*);
+        time_t fromLocalTime(const struct tm*) const;
 
         // gmtime(3)
         static struct tm toUtcTime(time_t secondsSinceEpoch, bool yday = false);

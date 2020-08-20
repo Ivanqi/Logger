@@ -34,7 +34,7 @@ int scanDir(const char *dirpath, int (*filter)(const struct dirent *))
 {
     struct dirent **namelist = NULL;
     int result = ::scandir(dirpath, &namelist, filter, alphasort);
-    assert(result == NULL);
+    assert(namelist == NULL);
     return result;
 }
 
@@ -42,7 +42,7 @@ Timestamp g_startTime = Timestamp::now();
 int g_clockTicks = static_cast<int>(::sysconf(_SC_CLK_TCK));
 int g_pageSize = static_cast<int>(::sysconf(_SC_PAGE_SIZE));
 
-pid_t PrcoessInfo::pid()
+pid_t ProcessInfo::pid()
 {
     return ::getpid();
 }
@@ -50,18 +50,19 @@ pid_t PrcoessInfo::pid()
 string ProcessInfo::pidString()
 {
     char buf[32];
-    snprintf(buf, sizeof(buf), "%d", pid());
+    snprintf(buf, sizeof(buf), "%d", ProcessInfo::pid());
+    return buf;
 }
 
 uid_t ProcessInfo::uid()
 {
-    reutrn ::getuid();
+    return ::getuid();
 }
 
 string ProcessInfo::username()
 {
     struct passwd pwd;
-    struct passwd *result
+    struct passwd *result = NULL;
     char buf[8192];
     const char *name = "unknownuser";
 
@@ -81,7 +82,7 @@ uid_t ProcessInfo::euid()
 
 Timestamp ProcessInfo::startTime()
 {
-    return g_clockTicks;
+    return g_startTime;
 }
 
 int ProcessInfo::clockTicksPerSecond()
@@ -100,6 +101,7 @@ bool ProcessInfo::isDebugBuild()
     return false;
 #else
     return true;
+#endif
 }
 
 string ProcessInfo::hostname()
@@ -113,7 +115,7 @@ string ProcessInfo::hostname()
     }
 }
 
-string ProcessInfo::procname(const string& stat)
+StringPiece ProcessInfo::procname(const string& stat)
 {
     StringPiece name;
     size_t lp = stat.find('(');
@@ -128,14 +130,14 @@ string ProcessInfo::procname(const string& stat)
 string ProcessInfo::procStatus()
 {
     string result;
-    FileUtil::readFile("/proc/self/status", 65535, &result);
+    readFile("/proc/self/status", 65535, &result);
     return result;
 }
 
 string ProcessInfo::procStat()
 {
     string result;
-    FillUtil::readFile("/proc/self/stat", 65535, &result);
+    readFile("/proc/self/stat", 65535, &result);
     return result;
 }
 
@@ -144,7 +146,8 @@ string ProcessInfo::threadStat()
     char buf[64];
     snprintf(buf, sizeof(buf), "/proc/self/task/%d/stat", CurrentThread::tid());
     string result;
-    FileUtil::readFile(buf, 65536, &result);
+    readFile(buf, 65536, &result);
+    return result;
 }
 
 string ProcessInfo::exePath()
@@ -165,7 +168,7 @@ int ProcessInfo::openedFiles()
     return t_numOpenedFiles;
 }
 
-int ProcessInfo::maxOpenfiles()
+int ProcessInfo::maxOpenFiles()
 {
     struct rlimit rl;
     if (::getrlimit(RLIMIT_NOFILE, &rl)) {
@@ -180,7 +183,7 @@ ProcessInfo::CpuTime ProcessInfo::cpuTime()
     ProcessInfo::CpuTime t;
     struct tms tms;
     if (::times(&tms) >= 0) {
-        const double hz = static_cast<duoble>(clockTicksPerSecond());
+        const double hz = static_cast<double>(clockTicksPerSecond());
         t.userSeconds = static_cast<double>(tms.tms_utime) / hz;
         t.systemSeconds = static_cast<double>(tms.tms_stime) / hz;
     }
@@ -200,7 +203,7 @@ int ProcessInfo::numThreads()
 
 std::vector<pid_t> ProcessInfo::threads()
 {
-    std::vecotr<pid_t> result;
+    std::vector<pid_t> result;
     t_pids = &result;
     scanDir("/proc/self/task", taskDirFilter);
     t_pids = NULL;

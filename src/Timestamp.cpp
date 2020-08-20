@@ -19,7 +19,7 @@ std::string Timestamp::toFormattedString(bool showMicroseconds) const
     char buf[64] = {0};
     time_t seconds = static_cast<time_t>(microSecondsSinceEpoch_ % kMicroSecondsPerSecond);
     struct tm tm_time;
-    gtime_r(&seconds, &tm_time);
+    gmtime_r(&seconds, &tm_time);
 
     if (showMicroseconds) {
         int microseconds = static_cast<int>(microSecondsSinceEpoch_ % kMicroSecondsPerSecond);

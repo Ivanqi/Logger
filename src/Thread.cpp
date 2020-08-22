@@ -10,6 +10,7 @@
 
 #include "Thread.h"
 #include "CurrentThread.h"
+#include "Exception.h"
 
 pid_t gettid()
 {
@@ -49,8 +50,28 @@ struct ThreadData
         CurrentThread::t_threadName = name_.empty() ? "Thread" : name_.c_str();
         prctl(PR_SET_NAME, CurrentThread::t_threadName);
 
-        func_();
-        CurrentThread::t_threadName = "finished";
+        try {
+            func_();
+            CurrentThread::t_threadName = "finished";
+
+        } catch (const Exception& ex) {
+            CurrentThread::t_threadName = "crashed";
+            fprintf(stderr, "exception caught in Thread %s\n", name_.c_str());
+            fprintf(stderr, "reason: %s\n", ex.what());
+            fprintf(stderr, "stack trace: %s\n", ex.stackTrace());
+            abort();
+
+        } catch (const std::exception& ex) {
+            CurrentThread::t_threadName = "crashed";
+            fprintf(stderr, "exception caught in Thread %s\n", name_.c_str());
+            fprintf(stderr, "reason: %s\n", ex.what());
+            abort();
+
+        } catch(...) {
+            CurrentThread::t_threadName = "crashed";
+            fprintf(stderr, "unknown exception caught in Thread %s\n", name_.c_str());
+            throw;
+        }
     }
 };
 

@@ -53,12 +53,14 @@ LogStream& LogStream::operator<<(unsigned short v)
     return *this;
 }
 
-LogStream& LogStream::operator<<(int v) {
+LogStream& LogStream::operator<<(int v) 
+{
     formatInteger(v);
     return *this;
 }
 
-LogStream& LogStream::operator<<(unsigned int v) {
+LogStream& LogStream::operator<<(unsigned int v) 
+{
     formatInteger(v);
     return *this;
 }

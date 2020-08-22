@@ -5,27 +5,8 @@
 #include <sys/time.h> 
 #include "Logging.h"
 #include "CurrentThread.h"
-// #include "Thread.h"
-// #include "AsyncLogging.h"
 #include "Timestamp.h"
 #include "TimeZone.h"
-
-// static pthread_once_t once_control_ = PTHREAD_ONCE_INIT;
-// static AsyncLogging *AsyncLogger_;
-
-// std::string Logger::logFileName_ = "/web.log";
-
-// void once_init()
-// {
-//     AsyncLogger_ = new AsyncLogging(Logger::getLogFileName());
-//     AsyncLogger_->start();
-// }
-
-// void output(const char* msg, int len)
-// {
-//     pthread_once(&once_control_, once_init);
-//     AsyncLogger_->append(msg, len);
-// }
 
 __thread char t_errnobuf[512];
 __thread char t_time[64];
@@ -58,7 +39,7 @@ const char* LogLevelName[Logger::NUM_LOG_LEVELS] = {
     "FATAL ",
 };
 
-// helper class for know string length at compile time
+// 用于在编译时知道字符串长度的助手类
 class T
 {
     public:
@@ -99,12 +80,13 @@ Logger::FlushFunc g_flush = defaultFlush;
 TimeZone g_logTimeZone;
 
 Logger::RecordBlock::RecordBlock(LogLevel level, int savedErrno, const SourceFile& file, int line) 
-    : time_(Timestamp::now()), stream_(), level_(level), line_(line), basename_(file)
+    : time_(Timestamp::now()), stream_(), 
+    level_(level), line_(line), basename_(file)
 {
   formatTime();
 
   CurrentThread::tid();
-  stream_ << T(CurrentThread::tidString(), CurrentThread::tidStringLength());
+  stream_ << T(CurrentThread::tidString(), CurrentThread::tidStringLength()) << ' ';
   stream_ << T(LogLevelName[level], 6);
   
   if (savedErrno != 0) {
@@ -113,18 +95,8 @@ Logger::RecordBlock::RecordBlock(LogLevel level, int savedErrno, const SourceFil
 }
 
 // 记录当前时间
-void Logger::RecordBlock::formatTime() {
-    // struct timeval tv;
-    // time_t time;
-    // char str_t[26] = {0};
-
-    // gettimeofday(&tv, NULL);
-    // time = tv.tv_sec;
-
-    // struct tm* p_time = localtime(&time);
-
-    // strftime(str_t, 26, "%Y-%m-%d %H:%M:%S\n", p_time);
-    // stream_ << str_t;
+void Logger::RecordBlock::formatTime() 
+{
     int64_t microSecondsSinceEpoch = time_.microSecondsSinceEpoch();
     time_t seconds = static_cast<time_t>(microSecondsSinceEpoch / Timestamp::kMicroSecondsPerSecond);
     int microseconds = static_cast<int> (microSecondsSinceEpoch % Timestamp::kMicroSecondsPerSecond);
@@ -159,7 +131,7 @@ void Logger::RecordBlock::formatTime() {
 
 void Logger::RecordBlock::finish() 
 {
-    stream_ << " - " << basename_ << ':' << line_ << '\n';
+    stream_ << " - " << basename_.data_ << ':' << line_ << '\n';
 }
 
 Logger::Logger(SourceFile file, int line): Redcord(INFO, 0, file, line)
@@ -179,10 +151,8 @@ Logger::Logger(SourceFile file, int line, bool toAbort): Redcord(toAbort ? FATAL
 {
 }
 
-Logger::~Logger() {
-    // Redcord.stream_ << " -- " << Redcord.basename_ << ':' << Redcord.line_ << '\n';
-    // const LogStream::Buffer& buf(stream().buffer());
-    // output(buf.data(), buf.length());
+Logger::~Logger() 
+{
     Redcord.finish();
     const LogStream::Buffer& buf(stream().buffer());
     g_output(buf.data(), buf.length());

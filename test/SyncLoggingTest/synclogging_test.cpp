@@ -89,7 +89,7 @@ int main() {
     fclose(g_file);
 
     g_file = NULL;
-    g_logFile.reset(new LogFile("test_log_st", 500*1000*1000, false));
+    g_logFile.reset(new LogFile("test_log_st", 500 * 1000 * 1000, false));
     bench("test_log_st");
 
     g_logFile.reset(new LogFile("test_log_mt", 500*1000*1000, true));
@@ -99,7 +99,7 @@ int main() {
     {
         g_file = stdout;
         sleep(1);
-        TimeZone beijing(8*3600, "CST");
+        TimeZone beijing(8 * 3600, "CST");
         Logger::setTimeZone(beijing);
         LOG_TRACE << "trace CST";
         LOG_DEBUG << "debug CST";

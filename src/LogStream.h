@@ -6,7 +6,6 @@
 #include <string>
 #include <boost/noncopyable.hpp>
 
-
 const int kSmallBuffer = 4000;
 const int kLargeBuffer = 4000 * 1000;
 

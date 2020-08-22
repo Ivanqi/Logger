@@ -35,7 +35,7 @@ void ThreadPool::start(int numThreads)
     }
 }
 
-void ThreadPool::stop() 
+void ThreadPool::stop()
 {
     {
         MutexLockGuard lock(mutex_);

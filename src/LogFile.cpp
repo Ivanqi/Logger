@@ -25,30 +25,43 @@ LogFile::~LogFile() = default;
 
 void LogFile::append(const char* logline, int len)
 {
-    MutexLockGuard lock(*mutex_);
-    append_unlocked(logline, len);
+    if (mutex_) {
+        MutexLockGuard lock(*mutex_);
+        append_unlocked(logline, len);
+    } else {
+        append_unlocked(logline, len);
+    }    
 }
 
 void LogFile::flush()
 {
-    MutexLockGuard lock(*mutex_);
-    file_->flush();
+    if (mutex_) {
+        MutexLockGuard lock(*mutex_);
+        file_->flush();
+    } else {
+        file_->flush();
+    }
+    
+   
 }
 
 void LogFile::append_unlocked(const char* logline, int len) 
 {
     file_->append(logline, len);
+    // 写入的字节是否大于 要轮转的字节
     if (file_->writtenBytes() > rollSize_) {
         rollFile();
     } else {
         ++count_;
+        // count_ 大于 checkEveryN_。需要检查，是否需要轮转日志或者情况文件缓存
         if (count_ >= checkEveryN_) {
             count_ = 0;
             time_t now = ::time(NULL);
             time_t thisPeriod_ = now / kRollPerSeconds_ * kRollPerSeconds_;
+            // thisPeriod_ != startOfPeriod_ 意味这轮转日志的时间已经不一样了
             if (thisPeriod_ != startOfPeriod_) {
                 rollFile();
-            } else if (now - lastFlush_ > flushInterval_) {
+            } else if (now - lastFlush_ > flushInterval_) { // 清空文件缓存
                 lastFlush_ = now;
                 file_->flush();
             }

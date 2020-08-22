@@ -14,14 +14,14 @@ class MutexLock: boost::noncopyable
         pid_t holder_;
 
     public:
-        MutexLock() 
+        MutexLock(): holder_(0)
         {
             pthread_mutex_init(&mutex, NULL);
         }
 
         ~MutexLock()
         {
-            pthread_mutex_lock(&mutex);
+            assert(holder_ == 0);
             pthread_mutex_destroy(&mutex);
         }
 
@@ -69,16 +69,16 @@ class MutexLock: boost::noncopyable
 class MutexLockGuard: boost::noncopyable
 {
     private:
-        MutexLock &mutex;
+        MutexLock &mutex_;
     public:
-        explicit MutexLockGuard(MutexLock &_mutex): mutex(_mutex)
+        explicit MutexLockGuard(MutexLock &mutex): mutex_(mutex)
         {
-            mutex.lock();
+            mutex_.lock();
         }
 
         ~MutexLockGuard()
         {
-            mutex.unlock();
+            mutex_.unlock();
         }
 };
 

@@ -8,7 +8,7 @@
 #include "FileUtil.h"
 #include "Types.h"
 
-AppendFile::AppendFile(std::string filename): fp_(fopen(filename.c_str(), "ae"))
+AppendFile::AppendFile(std::string filename): fp_(fopen(filename.c_str(), "ae")), writtenBytes_(0)
 {
     // 用户提供缓冲区
     setbuffer(fp_, buffer_, sizeof(buffer_));

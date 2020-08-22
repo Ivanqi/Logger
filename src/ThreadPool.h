@@ -16,7 +16,17 @@ class ThreadPool: boost::noncopyable
         typedef std::function<void ()> Task;
     private:
         mutable MutexLock mutex_;
+        /**
+         * notEmpty_ 代表队列不为空的变量的条件
+         *  队列为空，阻塞当前线程，等待任务队列不为空
+         *  在队列不为空，用于唤醒线程处理队列任务
+         */
         Condition notEmpty_;
+        /**
+         * notFull_ 代表队列未满
+         *  队列已满，阻塞当前队列，等待任务队列被处理
+         *  队列未满，用于唤醒线程处理队列任务
+         */
         Condition notFull_;
         string name_;
         Task threadInitCallback_;

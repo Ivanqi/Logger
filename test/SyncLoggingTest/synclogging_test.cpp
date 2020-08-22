@@ -1,4 +1,3 @@
-#include <iostream>
 #include <Logging.h>
 #include <LogFile.h>
 #include <ThreadPool.h>
@@ -12,8 +11,8 @@ int g_total;
 FILE* g_file;
 unique_ptr<LogFile> g_logFile;
 
-void dummyOutput(const char* msg, int len) {
-
+void dummyOutput(const char* msg, int len) 
+{
     g_total += len;
     if (g_file) {
         fwrite(msg, 1, len, g_file);

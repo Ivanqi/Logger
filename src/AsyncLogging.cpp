@@ -5,6 +5,7 @@
 
 #include "AsyncLogging.h"
 #include "LogFile.h"
+#include "Timestamp.h"
 
 AsyncLogging::AsyncLogging(std::string logFileName_, off_t rollSize, int flushInterval)
     :flushInterval_(flushInterval),
@@ -61,30 +62,47 @@ void AsyncLogging::threadFunc()
     // 用来和前端线程交换 Buffer
     BufferVector buffersToWrite;
     buffersToWrite.reserve(16);
+
     while (running_) {
         assert(newBuffer1 && newBuffer1->length() == 0);
         assert(newBuffer2 && newBuffer2->length() == 0);
         assert(buffersToWrite.empty());
-
+        
+        // 整段代码在临界区内，因此不会有任何race condition
         {
             MutexLockGuard lock(mutex_);
+            // 暂时无日志，现在进行休眠等待
             if (buffers_.empty()) {
                 cond_.waitForSeconds(flushInterval_);
             }
 
+            // currentBuffer_ 数据加入到buffers_, 并清空数据
             buffers_.push_back(currentBuffer_);
-            currentBuffer_.reset();
 
+            // 移动 newBuffer1 覆盖 currentBuffer_
             currentBuffer_ = std::move(newBuffer1);
+            // buffersToWrite 交换 buffers_ 的数据
             buffersToWrite.swap(buffers_);
+
+            // 如果 nextBuffer_ 不为空，移动newBuffer2 覆盖nextBuffer_
             if (!nextBuffer_) {
+                // 这样前端始终有一个预备buffer可供调用。即保证前端有两个空缓冲可用
+                // nextBuffer_可以减少前端临界区分配内存的概率，缩短前端临界区长度
                 nextBuffer_ = std::move(newBuffer2);
             }
         }
 
         assert(!buffersToWrite.empty());
 
+        // buffersToWrite 超出25
         if (buffersToWrite.size() > 25) {
+            char buf[256];
+            snprintf(buf, sizeof(buf), "Drooped log message at %s, %zd larger buffer\n",
+                Timestamp::now().toFormattedString().c_str(), buffersToWrite.size() - 2);
+            fputs(buf, stderr);
+            output.append(buf, static_cast<int>(strlen(buf)));
+
+            // 删除多余区域
             buffersToWrite.erase(buffersToWrite.begin() + 2, buffersToWrite.end());
         }
 
@@ -93,6 +111,7 @@ void AsyncLogging::threadFunc()
             output.append(buffersToWrite[i]->data(), buffersToWrite[i]->length());
         }
 
+        // 如果 buffersToWrite 大于 2，重置 buffersToWrite的长度为2.用于清空使用的两个缓存
         if (buffersToWrite.size() > 2) {
             buffersToWrite.resize(2);
         }

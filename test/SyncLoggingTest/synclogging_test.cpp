@@ -83,7 +83,7 @@ int main() {
     fclose(g_file);
 
     g_file = fopen("/tmp/log", "w");
-    setbuffer(g_file, buffer, sizeof buffer);
+    setbuffer(g_file, buffer, sizeof(buffer));
     bench("/tmp/log");
     fclose(g_file);
 
